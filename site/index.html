@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Présidentielle 2027 : évolution des sondages</title>
+<meta name="description" content="Évolution des intentions de vote au premier tour de la présidentielle 2027, par candidat, institut et période. Données mises à jour chaque matin.">
+<style>
+:root{
+  --bg:#ffffff;--fg:#1f1e1c;--muted:#66645f;--panel:#faf9f6;--line:#e2dfd8;--grid:#ebe9e3;--pop:#ffffff;--warn:#a3480a;
+  --font:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --serif:Georgia,'Iowan Old Style','Times New Roman',serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#161514;--fg:#ecebe8;--muted:#a3a19b;--panel:#1f1e1c;--line:#34322f;--grid:#2a2927;--pop:#262523;--warn:#f0a35c}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.5}
+.pv{max-width:1100px;margin:0 auto;padding:24px 16px 48px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(1.6rem,4vw,2.2rem);line-height:1.15;margin:0 0 10px}
+h2{font-size:1.15rem;font-weight:600;margin:32px 0 10px}
+.lede{font-size:1rem;margin:0 0 8px}
+.note{font-size:.8rem;color:var(--muted);margin:8px 0 0;line-height:1.5}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.controls{display:grid;gap:16px;margin-top:16px}
+.grp h3{font-size:.72rem;color:var(--muted);font-weight:600;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip,.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:999px;padding:3px 11px;font:inherit;font-size:.8rem;cursor:pointer}
+.chip:hover,.btn:hover{border-color:var(--muted)}
+.chip[aria-pressed=true]{background:color-mix(in srgb,var(--fg) 10%,transparent);border-color:var(--fg)}
+.chip:focus-visible,.btn:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-size:.8rem}
+.row label{display:inline-flex;align-items:center;gap:5px}
+select{font:inherit;font-size:.8rem;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:3px 6px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0}
+.kpi .v{font-family:var(--serif);font-size:1.7rem;line-height:1.2;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:.8rem;color:var(--muted)}
+.evo{position:relative;min-height:340px}
+.evo svg{display:block;max-width:100%}
+.tip{position:absolute;pointer-events:none;background:var(--pop);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.18);color:var(--muted);border-radius:8px;padding:6px 9px;font-size:.78rem;min-width:150px;max-width:230px;line-height:1.4}
+.tip b{color:var(--fg)}
+.tablewrap{overflow:auto;max-height:440px}
+table{border-collapse:collapse;width:100%;font-size:.8rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+thead th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:600}
+details{margin-top:24px;font-size:.82rem;line-height:1.55;color:var(--muted)}
+summary{cursor:pointer;color:var(--fg)}
+.empty{color:var(--warn)}
+footer{margin-top:32px;font-size:.78rem;color:var(--muted)}
+a{color:inherit}
+@media print{.controls{display:none}.tablewrap{max-height:none}}
+</style>
+</head>
+<body>
+<div class="pv">
+<h1>Présidentielle 2027 : l’évolution des sondages du premier tour</h1>
+<p class="lede" id="lede">Chargement des sondages…</p>
+<p class="lede empty" id="empty" hidden>Aucun sondage ne correspond à cette sélection : élargissez la période ou les instituts.</p>
+
+<section class="card controls" id="filtres" aria-label="Filtres">
+  <div class="grp"><h3>Candidats</h3><div class="chips" id="cands"></div>
+    <div class="row" style="margin-top:8px">
+      <button type="button" class="btn" data-act="main">Principaux</button>
+      <button type="button" class="btn" data-act="allc">Tous</button>
+      <button type="button" class="btn" data-act="noc">Aucun</button>
+    </div></div>
+  <div class="grp"><h3>Instituts</h3><div class="chips" id="pollsters"></div></div>
+  <div class="grp"><h3>Période</h3><div class="row">
+    <label>Du <select id="pfrom" aria-label="Mois de début"></select></label>
+    <label>au <select id="pto" aria-label="Mois de fin"></select></label>
+    <button type="button" class="btn" data-act="p0">Tout</button>
+    <button type="button" class="btn" data-act="p12">12 mois</button>
+    <button type="button" class="btn" data-act="p6">6 mois</button>
+    <button type="button" class="btn" data-act="p3">3 mois</button>
+  </div></div>
+  <div class="grp"><h3>Affichage</h3><div class="row">
+    <label><input type="radio" name="mode" value="avg"> Moyenne des scénarios par sondage</label>
+    <label><input type="radio" name="mode" value="all"> Tous les scénarios</label>
+    <label><input type="checkbox" id="trend"> Tendance lissée</label>
+    <button type="button" class="btn" data-act="reset">Réinitialiser</button>
+  </div></div>
+</section>
+
+<div class="kpis">
+  <div class="card kpi"><div class="v" id="k-polls">—</div><div class="l">sondages</div></div>
+  <div class="card kpi"><div class="v" id="k-scen">—</div><div class="l">scénarios testés</div></div>
+  <div class="card kpi"><div class="v" id="k-inst">—</div><div class="l">instituts</div></div>
+  <div class="card kpi"><div class="v" id="k-last">—</div><div class="l">dernier sondage</div></div>
+</div>
+
+<h2 id="evolution">Évolution des intentions de vote par candidat</h2>
+<div class="card"><div class="evo" id="evo">—</div>
+<p class="note">Passez la souris (ou touchez) un point pour voir l’institut, la date et l’échantillon. Un point correspond à un sondage (moyenne de ses scénarios) ou à un scénario selon l’affichage choisi.</p></div>
+
+<h2 id="instituts">Par institut : moyenne sur la période</h2>
+<div class="card"><div class="tablewrap" id="matrix">—</div>
+<p class="note">Moyenne des valeurs par sondage pour les candidats choisis. « Tous instituts » regroupe l’ensemble des sondages de la sélection.</p></div>
+
+<h2 id="sondages">Sondages un par un</h2>
+<div class="card"><div class="tablewrap"><table>
+<thead><tr><th class="l">Date</th><th class="l">Institut</th><th>Échantillon</th><th>Scénarios</th><th>Le Pen</th><th>Bardella</th><th>Mélenchon</th><th>Glucksmann</th><th>Philippe</th><th>Attal</th><th>Retailleau</th><th>Lisnard</th></tr></thead>
+<tbody id="pollbody"></tbody></table></div>
+<p class="note">Valeur moyenne sur les scénarios où le candidat est testé ; « — » si le candidat n’est pas testé dans ce sondage.</p></div>
+
+<details><summary>Définitions et limites</summary>
+<p><b>Moyenne par sondage.</b> Un sondage teste souvent plusieurs scénarios de candidatures (par exemple avec Attal ou Philippe seul à droite de la gauche). Le point d’un sondage est la moyenne des scénarios où le candidat figure. Comme les scénarios diffèrent, cette moyenne mélange des hypothèses : le mode « Tous les scénarios » montre la dispersion réelle.</p>
+<p><b>Tendance lissée.</b> Moyenne mobile gaussienne (écart-type de trois semaines) des points par sondage, calculée dans la page. C’est une aide à la lecture, pas une estimation statistique avec marge d’erreur.</p>
+<p><b>Candidat du RN.</b> Les libellés « Le Pen » et « Bardella » suivent les scénarios testés par chaque sondage, tels que relevés dans le tableau de Wikipédia.</p>
+<p><b>Limites.</b> Les sondages comportent une marge d’erreur de plusieurs points, plus large pour les petits scores. Quelques lignes du tableau source à la mise en forme irrégulière sont ignorées lors de la collecte.</p></details>
+
+<footer>
+  <p id="meta">Données : tableau « <a id="srclink" href="https://fr.wikipedia.org/wiki/Liste_de_sondages_sur_l%27%C3%A9lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2027">Liste de sondages sur l’élection présidentielle française de 2027</a> » (Wikipédia). Les notices officielles sont sur <a href="https://www.commission-des-sondages.fr/">commission-des-sondages.fr</a>.</p>
+  <p id="updated"></p>
+</footer>
+</div>
+
+<script src="vendor/d3.min.js"></script>
+<script>
+(function () {
+'use strict';
+const MS = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const ML = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const ORDER = ['Le Pen','Bardella','Mélenchon','Philippe','Glucksmann','Attal','Retailleau','Lisnard','Tondelier','Roussel','Zemmour','Dupont-Aignan','Arthaud','Poutou','Villepin','Faure','Hollande','Ruffin'];
+const DEF_C = ['Le Pen','Bardella','Mélenchon','Philippe','Glucksmann','Attal','Retailleau'];
+const TABLE_COLS = ['Le Pen','Bardella','Mélenchon','Glucksmann','Philippe','Attal','Retailleau','Lisnard'];
+const PALETTE = {
+  light: {'Le Pen':'#0b3c6f','Bardella':'#4c9bd6','Mélenchon':'#d55e00','Philippe':'#d49a00','Glucksmann':'#cc79a7','Attal':'#009e73','Retailleau':'#6a3d9a','Lisnard':'#8c6d31'},
+  dark:  {'Le Pen':'#6aa9e6','Bardella':'#9bcdf5','Mélenchon':'#ff8a3d','Philippe':'#f2c14e','Glucksmann':'#e79bc6','Attal':'#3ccf9f','Retailleau':'#b48be0','Lisnard':'#c9a45c'}
+};
+const FALLBACK = {
+  light:['#7a7a7a','#9c4f2a','#2f7f8f','#8a8f1c','#b0366b','#4b5fa8','#6b8e23','#a0522d'],
+  dark:['#b0b0b0','#d98a63','#6bbdcc','#c6cc4d','#e56fa0','#8fa3e8','#a5cc5c','#d9a07a']
+};
+const dark = window.matchMedia('(prefers-color-scheme: dark)');
+function colorOf(c) {
+  const th = dark.matches ? 'dark' : 'light';
+  if (PALETTE[th][c]) return PALETTE[th][c];
+  let h = 0; for (const ch of c) h += ch.charCodeAt(0);
+  return FALLBACK[th][h % FALLBACK[th].length];
+}
+const parse = d3.utcParse('%Y-%m-%d');
+const nf = v => String(Math.round(v * 10) / 10).replace('.', ',');
+const fmtDate = s => { const d = parse(s), j = d.getUTCDate(); return (j === 1 ? '1er' : j) + ' ' + ML[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); };
+const fmtShort = d => d.getUTCDate() + ' ' + MS[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+const monthLabel = s => { const [y, m] = s.split('-').map(Number); return ML[m - 1] + ' ' + y; };
+const $ = id => document.getElementById(id);
+
+let DATA = null, ROWS = [], MONTHS = [], POLLSTERS = [], NAMES = [];
+const state = { cands: DEF_C.slice(), pollsters: null, from: null, to: null, mode: 'avg', trend: true };
+
+/* ---------- état <-> URL ---------- */
+function readHash() {
+  const u = new URLSearchParams(location.hash.slice(1));
+  if (u.has('c')) state.cands = u.get('c') ? u.get('c').split(',') : [];
+  if (u.has('p')) state.pollsters = u.get('p').split(',');
+  if (u.has('from')) state.from = u.get('from');
+  if (u.has('to')) state.to = u.get('to');
+  if (u.get('mode') === 'all') state.mode = 'all';
+  if (u.get('trend') === '0') state.trend = false;
+}
+function writeHash() {
+  const u = new URLSearchParams();
+  if (state.cands.join() !== DEF_C.join()) u.set('c', state.cands.join(','));
+  if (state.pollsters) u.set('p', state.pollsters.join(','));
+  if (state.from) u.set('from', state.from);
+  if (state.to) u.set('to', state.to);
+  if (state.mode === 'all') u.set('mode', 'all');
+  if (!state.trend) u.set('trend', '0');
+  const s = u.toString();
+  history.replaceState(null, '', s ? '#' + s : location.pathname + location.search);
+}
+function set(patch) { Object.assign(state, patch); writeHash(); render(); }
+
+/* ---------- calculs ---------- */
+function inWindow() {
+  const from = state.from || '', to = state.to || '9999-12';
+  const ps = state.pollsters;
+  return ROWS.filter(r => { const m = r.date.slice(0, 7); return m >= from && m <= to && (!ps || ps.includes(r.pollster)); });
+}
+function seriesOf(rows) {
+  const g = new Map();
+  for (const r of rows) {
+    const k = r.poll_id + '|' + r.candidate;
+    let o = g.get(k);
+    if (!o) { o = { poll_id: r.poll_id, date: r.date, pollster: r.pollster, sample: r.sample, candidate: r.candidate, sum: 0, n: 0, min: Infinity, max: -Infinity }; g.set(k, o); }
+    o.sum += r.value; o.n++; o.min = Math.min(o.min, r.value); o.max = Math.max(o.max, r.value);
+  }
+  return [...g.values()].map(o => ({ poll_id: o.poll_id, date: o.date, pollster: o.pollster, sample: o.sample, candidate: o.candidate, value: Math.round(o.sum / o.n * 10) / 10, scenarios: o.n, min: o.min, max: o.max }));
+}
+function summaryOf(rows, series) {
+  if (!rows.length) return null;
+  const polls = new Set(rows.map(r => r.poll_id));
+  const scen = new Set(rows.map(r => r.poll_id + '|' + r.scenario));
+  const pols = new Set(rows.map(r => r.pollster));
+  let last = rows[0];
+  for (const r of rows) if (r.date > last.date || (r.date === last.date && r.poll_id < last.poll_id)) last = r;
+  const top = series.filter(r => r.poll_id === last.poll_id).sort((a, b) => b.value - a.value);
+  return { polls: polls.size, scenarios: scen.size, pollsters: pols.size, last_date: last.date, last_pollster: last.pollster,
+    leader: top[0] ? top[0].candidate : '', leader_value: top[0] ? top[0].value : 0,
+    second: top[1] ? top[1].candidate : '', second_value: top[1] ? top[1].value : 0 };
+}
+function matrixOf(series) {
+  const m = new Map();
+  const add = (c, ps, v) => { const k = c + '|' + ps; const o = m.get(k) || { candidate: c, pollster: ps, sum: 0, n: 0 }; o.sum += v; o.n++; m.set(k, o); };
+  for (const r of series) { if (!state.cands.includes(r.candidate)) continue; add(r.candidate, r.pollster, r.value); add(r.candidate, 'Tous instituts', r.value); }
+  return [...m.values()].map(o => ({ candidate: o.candidate, pollster: o.pollster, value: Math.round(o.sum / o.n * 10) / 10, polls: o.n }));
+}
+function pollRowsOf(series) {
+  const m = new Map();
+  for (const r of series) {
+    let o = m.get(r.poll_id);
+    if (!o) { o = { poll_id: r.poll_id, date: r.date, pollster: r.pollster, sample: r.sample, scenarios: 0 }; for (const c of TABLE_COLS) o[c] = null; m.set(r.poll_id, o); }
+    o.scenarios = Math.max(o.scenarios, r.scenarios);
+    if (TABLE_COLS.includes(r.candidate)) o[r.candidate] = r.value;
+  }
+  return [...m.values()].sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : (a.poll_id < b.poll_id ? -1 : 1));
+}
+
+/* ---------- rendu ---------- */
+function chip(label, pressed, dotColor, onclick) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+  if (dotColor) { const d = document.createElement('span'); d.className = 'dot'; d.style.background = dotColor; b.append(d); }
+  const t = document.createElement('span'); t.textContent = label; b.append(t);
+  b.addEventListener('click', onclick);
+  return b;
+}
+function renderControls() {
+  $('cands').replaceChildren(...NAMES.map(n => chip(n, state.cands.includes(n), colorOf(n), () => {
+    set({ cands: state.cands.includes(n) ? state.cands.filter(x => x !== n) : [...state.cands, n] });
+  })));
+  const selP = state.pollsters || POLLSTERS;
+  $('pollsters').replaceChildren(...POLLSTERS.map(n => chip(n, selP.includes(n), null, () => {
+    const cur = state.pollsters || POLLSTERS;
+    const nx = cur.includes(n) ? cur.filter(x => x !== n) : [...cur, n];
+    set({ pollsters: nx.length === POLLSTERS.length ? null : nx });
+  })));
+  for (const [id, key, def] of [['pfrom', 'from', MONTHS[0]], ['pto', 'to', MONTHS[MONTHS.length - 1]]]) {
+    const el = $(id);
+    el.replaceChildren(...MONTHS.map(m => new Option(monthLabel(m), m)));
+    el.value = state[key] || def;
+  }
+  document.querySelectorAll('input[name=mode]').forEach(r => { r.checked = r.value === state.mode; });
+  $('trend').checked = state.trend;
+}
+function renderSummary(sum) {
+  $('empty').hidden = !!sum;
+  if (!sum) {
+    $('lede').hidden = true;
+    for (const id of ['k-polls', 'k-scen', 'k-inst', 'k-last']) $(id).textContent = '—';
+    return;
+  }
+  $('lede').hidden = false;
+  $('lede').textContent = 'Dans le dernier sondage de la sélection (' + sum.last_pollster + ', ' + fmtDate(sum.last_date) + '), ' +
+    sum.leader + ' arrive en tête avec ' + nf(sum.leader_value) + ' % en moyenne sur les scénarios testés' +
+    (sum.second ? ', devant ' + sum.second + ' (' + nf(sum.second_value) + ' %)' : '') +
+    '. Ce sont des photographies d’opinion à un instant donné, pas des prévisions.';
+  $('k-polls').textContent = sum.polls; $('k-scen').textContent = sum.scenarios;
+  $('k-inst').textContent = sum.pollsters; $('k-last').textContent = fmtDate(sum.last_date);
+}
+function renderChart(inwin, series) {
+  const el = $('evo');
+  const cs = state.cands, mode = state.mode, trend = state.trend;
+  const mk = (r, n) => ({ c: r.candidate, t: parse(r.date), v: r.value, pollster: r.pollster, sample: r.sample, n, min: r.min, max: r.max, scen: r.scenario });
+  const avg = series.filter(r => cs.includes(r.candidate)).map(r => mk(r, r.scenarios));
+  const dots = mode === 'avg' ? avg : inwin.filter(r => cs.includes(r.candidate)).map(r => mk(r, 1));
+  if (!dots.length) { el.textContent = 'Aucune donnée pour cette sélection.'; return; }
+  const width = Math.max(300, el.clientWidth || 600);
+  const height = width < 520 ? 320 : Math.round(Math.min(480, width * 0.5));
+  const svg = d3.create('svg').attr('width', width).attr('height', height).attr('viewBox', '0 0 ' + width + ' ' + height)
+    .attr('role', 'img').attr('aria-label', 'Évolution des intentions de vote pour ' + cs.join(', '));
+  el.replaceChildren(svg.node());
+  const byC = d3.group(avg, d => d.c);
+  const lines = [];
+  for (const [c, arr] of byC) {
+    arr.sort((a, b) => a.t - b.t);
+    let pts = arr.map(d => ({ t: d.t, v: d.v }));
+    if (trend && arr.length >= 3) {
+      const bw = 21 * 864e5, t0 = +arr[0].t, t1 = +arr[arr.length - 1].t;
+      const n = Math.max(3, Math.min(60, Math.round((t1 - t0) / (7 * 864e5)) + 1));
+      pts = [];
+      for (let i = 0; i < n; i++) {
+        const t = t0 + (t1 - t0) * i / (n - 1);
+        let sw = 0, sv = 0;
+        for (const q of arr) { const w = Math.exp(-0.5 * Math.pow((+q.t - t) / bw, 2)); sw += w; sv += w * q.v; }
+        pts.push({ t: new Date(t), v: sv / sw });
+      }
+    }
+    lines.push({ c, pts: arr.length >= 2 && (trend || mode === 'avg') ? pts : null });
+  }
+  const labs = [...byC.keys()];
+  const tmp = svg.append('text').style('font-size', '12px');
+  let lw = 0; for (const c of labs) { tmp.text(c); lw = Math.max(lw, tmp.node().getComputedTextLength()); }
+  tmp.remove();
+  const m = { t: 12, r: Math.min(lw + 30, width * 0.3), b: 28, l: 40 };
+  const x = d3.scaleUtc().domain([d3.timeDay.offset(d3.min(dots, d => d.t), -7), d3.timeDay.offset(d3.max(dots, d => d.t), 7)]).range([m.l, width - m.r]);
+  const ymax = Math.max(5, Math.ceil(d3.max(dots, d => d.v) / 5) * 5);
+  const y = d3.scaleLinear().domain([0, ymax]).range([height - m.b, m.t]);
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  svg.append('g').selectAll('line').data(y.ticks(5)).join('line').attr('x1', m.l).attr('x2', width - m.r).attr('y1', d => y(d)).attr('y2', d => y(d)).attr('stroke', css('--grid'));
+  svg.append('g').selectAll('text').data(y.ticks(5)).join('text').attr('x', m.l - 6).attr('y', d => y(d) + 4).attr('text-anchor', 'end').attr('font-size', 11).attr('fill', css('--muted')).text(d => d + ' %');
+  const nt = Math.max(3, Math.floor((width - m.l - m.r) / 90));
+  svg.append('g').selectAll('text').data(x.ticks(nt)).join('text').attr('x', d => x(d)).attr('y', height - 8).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', css('--muted'))
+    .text(d => MS[d.getUTCMonth()] + ' ' + String(d.getUTCFullYear()).slice(2));
+  for (const l of lines) {
+    if (!l.pts) continue;
+    svg.append('path').attr('d', d3.line().x(d => x(d.t)).y(d => y(d.v))(l.pts)).attr('fill', 'none').attr('stroke', colorOf(l.c)).attr('stroke-width', 2.5).attr('stroke-linejoin', 'round');
+  }
+  svg.append('g').selectAll('circle').data(dots).join('circle').attr('cx', d => x(d.t)).attr('cy', d => y(d.v)).attr('r', mode === 'avg' ? 3.6 : 2.4)
+    .attr('fill', d => colorOf(d.c)).attr('opacity', trend || mode === 'all' ? 0.5 : 0.9);
+  const ends = labs.map(c => {
+    const l = lines.find(z => z.c === c), arr = byC.get(c);
+    const last = l && l.pts ? l.pts[l.pts.length - 1] : arr[arr.length - 1];
+    return { c, y: y(last.v) };
+  }).sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) ends[i].y = Math.max(ends[i].y, ends[i - 1].y + 13);
+  for (let i = ends.length - 2; i >= 0; i--) { if (ends[i + 1].y > height - m.b + 4) ends[i + 1].y = height - m.b + 4; ends[i].y = Math.min(ends[i].y, ends[i + 1].y - 13); }
+  const lg = svg.append('g');
+  for (const e of ends) {
+    lg.append('line').attr('x1', width - m.r + 6).attr('x2', width - m.r + 18).attr('y1', e.y).attr('y2', e.y).attr('stroke', colorOf(e.c)).attr('stroke-width', 3);
+    lg.append('text').attr('x', width - m.r + 22).attr('y', e.y + 4).attr('font-size', 12).attr('fill', css('--fg')).text(e.c);
+  }
+  const hl = svg.append('circle').attr('r', 0).attr('fill', 'none').attr('stroke', css('--fg')).attr('stroke-width', 2);
+  const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; el.append(tip);
+  svg.on('pointermove', ev => {
+    const [mx, my] = d3.pointer(ev);
+    let best = null, bd = 1e9;
+    for (const q of dots) { const dx = x(q.t) - mx, dy = y(q.v) - my, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = q; } }
+    if (!best || bd > 48 * 48) { tip.hidden = true; hl.attr('r', 0); return; }
+    hl.attr('cx', x(best.t)).attr('cy', y(best.v)).attr('r', 6);
+    tip.replaceChildren();
+    const add = (txt, bold) => { const d = document.createElement('div'); if (bold) { const b = document.createElement('b'); b.textContent = txt; d.append(b); } else d.textContent = txt; tip.append(d); };
+    add(best.c + ' : ' + nf(best.v) + ' %', true);
+    add(best.pollster + ' · ' + fmtShort(best.t));
+    if (best.sample) add('Échantillon : ' + best.sample.toLocaleString('fr-FR'));
+    if (mode === 'avg') add('Moyenne de ' + best.n + ' scénario' + (best.n > 1 ? 's' : '') + (best.n > 1 ? ' (' + nf(best.min) + ' à ' + nf(best.max) + ' %)' : ''));
+    else add('Scénario n° ' + best.scen);
+    tip.hidden = false;
+    const tw = tip.offsetWidth, th = tip.offsetHeight;
+    let lx = x(best.t) + 14; if (lx + tw > width) lx = x(best.t) - 14 - tw; lx = Math.max(0, lx);
+    tip.style.left = lx + 'px'; tip.style.top = Math.min(Math.max(0, y(best.v) - th / 2), height - th) + 'px';
+  });
+  svg.on('pointerleave', () => { tip.hidden = true; hl.attr('r', 0); });
+}
+function renderMatrix(series) {
+  const el = $('matrix');
+  const data = matrixOf(series);
+  if (!data.length) { el.textContent = 'Aucune donnée pour cette sélection.'; return; }
+  const cs = [...new Set(data.map(r => r.candidate))].sort((a, b) => { const ia = ORDER.indexOf(a), ib = ORDER.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b, 'fr'); });
+  const ps = ['Tous instituts', ...[...new Set(data.map(r => r.pollster))].filter(z => z !== 'Tous instituts').sort()];
+  const map = new Map(data.map(r => [r.candidate + '|' + r.pollster, r]));
+  const mx = d3.max(data, r => r.value) || 1;
+  const t = document.createElement('table');
+  const hd = t.createTHead().insertRow();
+  const h0 = document.createElement('th'); h0.className = 'l'; h0.textContent = 'Candidat'; hd.append(h0);
+  for (const q of ps) { const th = document.createElement('th'); th.textContent = q; hd.append(th); }
+  const tb = t.createTBody();
+  for (const c of cs) {
+    const row = tb.insertRow();
+    const th = row.insertCell(); th.className = 'l'; th.textContent = c;
+    for (const q of ps) {
+      const td = row.insertCell(), r = map.get(c + '|' + q);
+      if (r) { td.textContent = nf(r.value); td.style.background = 'color-mix(in srgb, ' + colorOf(c) + ' ' + Math.round(6 + r.value / mx * 30) + '%, transparent)'; }
+      else td.textContent = '—';
+    }
+  }
+  el.replaceChildren(t);
+}
+function renderPollTable(series) {
+  $('pollbody').replaceChildren(...pollRowsOf(series).map(r => {
+    const tr = document.createElement('tr');
+    const mk = (txt, l) => { const td = document.createElement('td'); if (l) td.className = 'l'; td.textContent = txt; tr.append(td); };
+    mk(fmtShort(parse(r.date)), true); mk(r.pollster, true);
+    mk(r.sample ? r.sample.toLocaleString('fr-FR') : '—'); mk(String(r.scenarios));
+    for (const c of TABLE_COLS) mk(r[c] == null ? '—' : nf(r[c]));
+    return tr;
+  }));
+}
+function render() {
+  renderControls();
+  const inwin = inWindow(), series = seriesOf(inwin);
+  renderSummary(summaryOf(inwin, series));
+  renderChart(inwin, series);
+  renderMatrix(series);
+  renderPollTable(series);
+}
+
+/* ---------- événements ---------- */
+document.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => {
+  const a = b.getAttribute('data-act');
+  if (a === 'main') set({ cands: DEF_C.slice() });
+  else if (a === 'allc') set({ cands: NAMES.slice() });
+  else if (a === 'noc') set({ cands: [] });
+  else if (a === 'p0') set({ from: null, to: null });
+  else if (/^p\d+$/.test(a)) set({ from: MONTHS[Math.max(0, MONTHS.length - Number(a.slice(1)))] || null, to: null });
+  else if (a === 'reset') set({ cands: DEF_C.slice(), pollsters: null, from: null, to: null, mode: 'avg', trend: true });
+}));
+document.querySelectorAll('input[name=mode]').forEach(r => r.addEventListener('change', () => { if (r.checked) set({ mode: r.value }); }));
+$('trend').addEventListener('change', e => set({ trend: e.target.checked }));
+for (const [id, key] of [['pfrom', 'from'], ['pto', 'to']]) {
+  $(id).addEventListener('change', e => {
+    const f = key === 'from' ? e.target.value : (state.from || MONTHS[0]);
+    const t = key === 'to' ? e.target.value : (state.to || MONTHS[MONTHS.length - 1]);
+    set(f > t ? { from: t, to: f } : { [key]: e.target.value });
+  });
+}
+let rt; new ResizeObserver(() => { if (!DATA) return; clearTimeout(rt); rt = setTimeout(render, 120); }).observe($('evo'));
+dark.addEventListener('change', () => { if (DATA) render(); });
+window.addEventListener('hashchange', () => { if (!DATA) return; Object.assign(state, { cands: DEF_C.slice(), pollsters: null, from: null, to: null, mode: 'avg', trend: true }); readHash(); render(); });
+
+/* ---------- chargement ---------- */
+fetch('data/polls.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(d => {
+  DATA = d; ROWS = d.rows;
+  const ds = ROWS.map(r => r.date.slice(0, 7)).sort();
+  let [y, m] = ds[0].split('-').map(Number); const [y2, m2] = ds[ds.length - 1].split('-').map(Number);
+  while (y < y2 || (y === y2 && m <= m2)) { MONTHS.push(y + '-' + String(m).padStart(2, '0')); m++; if (m > 12) { m = 1; y++; } }
+  POLLSTERS = [...new Set(ROWS.map(r => r.pollster))].sort();
+  const cnt = d3.rollup(ROWS, v => v.length, r => r.candidate);
+  NAMES = [...cnt.keys()].sort((a, b) => { const ia = ORDER.indexOf(a), ib = ORDER.indexOf(b); if (ia >= 0 || ib >= 0) return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); return cnt.get(b) - cnt.get(a) || a.localeCompare(b, 'fr'); });
+  if (d.source) $('srclink').href = d.source;
+  if (d.generated_at) {
+    const g = new Date(d.generated_at);
+    $('updated').textContent = 'Données collectées le ' + g.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' }) +
+      ' à ' + g.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }) + ' (mise à jour automatique chaque matin).';
+  }
+  readHash(); render();
+}).catch(e => { $('lede').textContent = 'Impossible de charger les données (' + e.message + ').'; });
+})();
+</script>
+</body>
+</html>
