@@ -104,6 +104,14 @@ a{color:inherit}
 <tbody id="pollbody"></tbody></table></div>
 <p class="note">Valeur moyenne sur les scénarios où le candidat est testé ; « — » si le candidat n’est pas testé dans ce sondage.</p></div>
 
+<h2 id="explorer">Explorer les sondages avec SandDance</h2>
+<div class="card">
+  <p class="note" style="margin-top:0">Chaque cube est une valeur (un candidat dans un scénario d’un sondage). Dans le panneau de SandDance, choisissez les axes, la couleur ou le regroupement (par candidat, institut, mois…). Les données suivent les filtres ci-dessus.</p>
+  <p><button type="button" class="btn" id="sd-load">Charger l’explorateur</button></p>
+  <iframe id="sd-frame" title="Explorateur SandDance" hidden referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin" style="width:100%;height:700px;border:1px solid var(--line);border-radius:8px;background:var(--bg)"></iframe>
+  <p class="note">Outil <a href="https://microsoft.github.io/SandDance/">SandDance</a> (Microsoft, licence MIT), chargé depuis microsoft.github.io uniquement quand vous cliquez sur le bouton ; les données de la page lui sont transmises dans votre navigateur.</p>
+</div>
+
 <details><summary>Définitions et limites</summary>
 <p><b>Moyenne par sondage.</b> Un sondage teste souvent plusieurs scénarios de candidatures (par exemple avec Attal ou Philippe seul à droite de la gauche). Le point d’un sondage est la moyenne des scénarios où le candidat figure. Comme les scénarios diffèrent, cette moyenne mélange des hypothèses : le mode « Tous les scénarios » montre la dispersion réelle.</p>
 <p><b>Tendance lissée.</b> Moyenne mobile gaussienne (écart-type de trois semaines) des points par sondage, calculée dans la page. C’est une aide à la lecture, pas une estimation statistique avec marge d’erreur.</p>
@@ -378,8 +386,31 @@ function renderPollTable(series) {
     return tr;
   }));
 }
+/* ---------- SandDance (iframe, chargé à la demande) ---------- */
+const SD_URL = 'https://microsoft.github.io/SandDance/embed/v4/sanddance-embed.html';
+let sdReady = false, sdTimer;
+function sdRows() {
+  return inWindow().filter(r => state.cands.includes(r.candidate)).map(r => ({
+    candidat: r.candidate, institut: r.pollster, date: r.date, mois: r.date.slice(0, 7),
+    valeur: r.value, scenario: r.scenario, echantillon: r.sample || null, sondage: r.poll_id
+  }));
+}
+function sdSend() {
+  const f = $('sd-frame');
+  if (!sdReady || !f.contentWindow) return;
+  f.contentWindow.postMessage({ action: 'load', data: sdRows(),
+    props: { theme: dark.matches ? 'dark-theme' : '', initialSidebarClosed: false } }, '*');
+}
+$('sd-load').addEventListener('click', () => {
+  const f = $('sd-frame'), b = $('sd-load');
+  b.hidden = true; f.hidden = false;
+  f.addEventListener('load', () => { sdReady = true; sdSend(); }, { once: true });
+  f.src = SD_URL;
+});
+
 function render() {
   renderControls();
+  clearTimeout(sdTimer); sdTimer = setTimeout(sdSend, 400);
   const inwin = inWindow(), series = seriesOf(inwin);
   renderSummary(summaryOf(inwin, series));
   renderChart(inwin, series);
