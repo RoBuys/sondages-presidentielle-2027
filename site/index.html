@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Présidentielle 2027 : évolution des sondages</title>
-<meta name="description" content="Évolution des intentions de vote au premier tour de la présidentielle 2027, par candidat, institut et période. Données mises à jour chaque matin.">
+<meta name="description" content="Évolution des intentions de vote au premier tour de la présidentielle 2027, par candidat, institut et période. Données mises à jour deux fois par jour.">
 <style>
 :root{
   --bg:#ffffff;--fg:#1f1e1c;--muted:#66645f;--panel:#faf9f6;--line:#e2dfd8;--grid:#ebe9e3;--pop:#ffffff;--warn:#a3480a;
@@ -454,7 +454,7 @@ fetch('data/polls.json', { cache: 'no-cache' }).then(r => { if (!r.ok) throw new
   if (d.generated_at) {
     const g = new Date(d.generated_at);
     $('updated').textContent = 'Données collectées le ' + g.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' }) +
-      ' à ' + g.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }) + ' (mise à jour automatique chaque matin).';
+      ' à ' + g.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }) + ' (mise à jour automatique deux fois par jour).';
   }
   readHash(); render();
 }).catch(e => { $('lede').textContent = 'Impossible de charger les données (' + e.message + ').'; });
